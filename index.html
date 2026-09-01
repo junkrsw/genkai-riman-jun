@@ -1,156 +1,94 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>限界リーマン純</title><style>*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif;background:#e8e4da;color:#111;overflow:hidden}#g{display:block;width:100vw;height:100dvh;touch-action:none}.hud{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 10px) 14px;pointer-events:none}.row{display:flex;justify-content:space-between;align-items:end;font-weight:900}.small{font-size:10px;color:#666}.progress{height:9px;border:2px solid #111;background:#fff;margin-top:6px}.prog{height:100%;background:#111;width:0}.bar{height:12px;border:2px solid #111;background:#fff;margin-top:4px}.fill{height:100%;width:20%;background:#111}.ov{position:fixed;inset:0;background:rgba(244,241,232,.97);display:grid;place-items:center;padding:24px;z-index:5}.card{width:min(420px,100%);border:3px solid #111;background:#fffdf7;padding:28px 22px;text-align:center;box-shadow:8px 8px 0 #111}h1{font-size:40px;line-height:1.05;margin:8px 0}p{line-height:1.7;color:#666}button{width:100%;padding:16px;border:0;background:#111;color:white;font-size:20px;font-weight:900}.hide{display:none}.msg{position:fixed;top:23%;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 12px;font-weight:900;opacity:0;white-space:nowrap;z-index:3}.show{opacity:1}.stageflash{position:fixed;inset:0;display:grid;place-items:center;background:#111;color:#fff;z-index:4;text-align:center}.stageflash.hide{display:none}.stageflash b{font-size:38px}</style></head><body><canvas id="g"></canvas><div class="hud"><div class="row"><div><div class="small" id="clock">MONDAY AM 6:34</div><span id="stage">STAGE 1 通勤地獄</span></div><div style="text-align:right"><div class="small">ゴールまで</div><span id="remain">900</span> m</div></div><div class="progress"><div id="prog" class="prog"></div></div><div style="margin-top:7px"><div class="row" style="font-size:11px"><span>純の限界度</span><span id="stressT">20%</span></div><div class="bar"><div id="fill" class="fill"></div></div></div></div><div id="msg" class="msg"></div><div id="flash" class="stageflash hide"><div><div class="small" style="color:#aaa">STAGE CLEAR</div><b id="flashT"></b><p id="flashP" style="color:#ddd"></p></div></div><div id="start" class="ov"><div class="card"><div class="small">SALARYMAN SURVIVAL</div><h1>限界リーマン純</h1><p>通勤、仕事、残業。<br>3つの地獄を飛び越えて退勤せよ。</p><button id="startB" type="button">出社する</button><p class="small">画面タップ：ジャンプ　有給：無敵</p></div></div><div id="over" class="ov hide"><div class="card"><div class="small">GAME OVER</div><h1>純、限界。</h1><p id="overP"></p><button id="retry" type="button">翌日も出社する</button></div></div><div id="win" class="ov hide"><div class="card"><div class="small">ALL CLEAR</div><h1>純、退勤。</h1><p>今日も一日、生き延びた。<br>明日は明日の会議がある。</p><button id="again" type="button">また月曜日</button></div></div><script>(() => {
-  const $ = (s) => document.querySelector(s);
-  const canvas = $('#g');
-  const ctx = canvas.getContext('2d');
-  const stageEl = $('#stage');
-  const remainEl = $('#remain');
-  const progEl = $('#prog');
-  const stressFill = $('#fill');
-  const stressText = $('#stressT');
-  const messageEl = $('#msg');
-  const startOverlay = $('#start');
-  const overOverlay = $('#over');
-  const winOverlay = $('#win');
-  const flash = $('#flash');
-  let W = 0, H = 0, dpr = 1;
-  let player, obstacles = [];
-  let running = false, transition = false;
-  let last = 0, spawnTimer = 0, speed = 270;
-  let stress = 20, stageIndex = 0, distance = 0, invincible = 0;
-  const stages = [
-    {name:'通勤地獄', goal:900, clock:'MONDAY AM 6:34', bg:'#e9e5db', clear:'無事、出社してしまった。', types:[
-      {icon:'🚃', label:'満員電車', w:160, h:54, damage:18, kind:'train'},
-      {icon:'🚉', label:'改札ラッシュ', w:50, h:58, damage:16},
-      {icon:'👥', label:'人、人、人。', w:62, h:66, damage:18},
-      {icon:'💼', label:'忘れ物：PC', w:44, h:44, damage:14}
-    ]},
-    {name:'勤務地獄', goal:1100, clock:'MONDAY AM 9:03', bg:'#eeeae1', clear:'定時という概念を発見。', types:[
-      {icon:'👔', label:'部長「ちょっといい？」', w:78, h:118, damage:28, kind:'boss'},
-      {icon:'📊', label:'謎のExcel', w:50, h:50, damage:20},
-      {icon:'🪑', label:'会議が長い', w:140, h:46, damage:22, kind:'desk'},
-      {icon:'🖨️', label:'紙詰まり', w:52, h:58, damage:18},
-      {icon:'💬', label:'未読99+', w:48, h:48, damage:20}
-    ]},
-    {name:'残業地獄', goal:1250, clock:'MONDAY PM 8:47', bg:'#d7d4cf', clear:'', types:[
-      {icon:'👔', label:'部長、まだいる。', w:90, h:145, damage:32, kind:'boss'},
-      {icon:'🕘', label:'緊急対応', w:52, h:62, damage:24},
-      {icon:'📚', label:'タスクの山', w:76, h:82, damage:26},
-      {icon:'💬', label:'至急お願いします', w:48, h:48, damage:22},
-      {icon:'🪑', label:'終わらない会議', w:150, h:46, damage:25, kind:'desk'}
-    ]}
-  ];
-  function resize() {
-    W = window.innerWidth; H = window.innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  function groundY(){ return H * 0.79; }
-  function resetGame(){
-    stageIndex = 0; stress = 20; distance = 0; invincible = 0; transition = false;
-    obstacles = []; spawnTimer = 0.9; speed = 270;
-    player = {x:65, y:groundY()-62, vy:0, w:28, h:62, onGround:true};
-    updateUI();
-  }
-  function updateUI(){
-    const s = stages[stageIndex];
-    stageEl.textContent = `STAGE ${stageIndex+1} ${s.name}`;
-    $('#clock').textContent = s.clock;
-    remainEl.textContent = Math.max(0, Math.ceil(s.goal - distance));
-    progEl.style.width = `${Math.min(100, distance / s.goal * 100)}%`;
-    stressText.textContent = `${Math.round(stress)}%`;
-    stressFill.style.width = `${Math.min(100, stress)}%`;
-  }
-  function startGame(){
-    resetGame(); running = true;
-    startOverlay.classList.add('hide'); overOverlay.classList.add('hide'); winOverlay.classList.add('hide');
-    last = performance.now(); requestAnimationFrame(loop);
-  }
-  function jump(){ if(running && !transition && player.onGround){ player.vy = -790; player.onGround = false; } }
-  function say(text){
-    messageEl.textContent = text; messageEl.classList.add('show');
-    clearTimeout(say.timer); say.timer = setTimeout(() => messageEl.classList.remove('show'), 700);
-  }
-  function collides(a,b){ return a.x+5 < b.x+b.w && a.x+a.w-5 > b.x && a.y+4 < b.y+b.h && a.y+a.h-3 > b.y; }
-  function gameOver(){
-    running = false;
-    $('#overP').innerHTML = `STAGE ${stageIndex+1}「${stages[stageIndex].name}」で心が折れた。<br>ゴールまで <b>${Math.ceil(stages[stageIndex].goal-distance)}m</b>`;
-    setTimeout(() => overOverlay.classList.remove('hide'), 180);
-  }
-  function nextStage(){
-    transition = true; flash.classList.remove('hide');
-    $('#flashT').textContent = `STAGE ${stageIndex+1} CLEAR`;
-    $('#flashP').textContent = stages[stageIndex].clear;
-    setTimeout(() => {
-      stageIndex += 1;
-      if(stageIndex >= stages.length){ running = false; flash.classList.add('hide'); winOverlay.classList.remove('hide'); return; }
-      distance = 0; obstacles = []; spawnTimer = 0.8; stress = Math.max(15, stress-15); speed = 290 + stageIndex*25;
-      player.y = groundY()-player.h; player.vy = 0; player.onGround = true;
-      transition = false; flash.classList.add('hide'); updateUI();
-    }, 1500);
-  }
-  function spawnOne(){
-    if(Math.random() < 0.08){ obstacles.push({x:W+30, y:groundY()-45, w:45, h:45, type:{icon:'🏖️', label:'有給取得！', damage:0, kind:'paid'}, hit:false}); return; }
-    const pool = stages[stageIndex].types;
-    const type = pool[Math.floor(Math.random()*pool.length)];
-    obstacles.push({x:W+20, y:groundY()-type.h, w:type.w, h:type.h, type, hit:false});
-  }
-  function drawBackground(){
-    const s = stages[stageIndex]; ctx.fillStyle = s.bg; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = stageIndex===2 ? '#999' : '#c9c5bd';
-    for(let i=0;i<7;i++){ const bx=i*95-(distance*2%95); ctx.fillRect(bx,groundY()-125,65,125); }
-    ctx.strokeStyle='#111'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(0,groundY()); ctx.lineTo(W,groundY()); ctx.stroke();
-    ctx.fillStyle='#666'; ctx.font='700 12px sans-serif';
-    ctx.fillText(stageIndex===0?'会社まで走れ。':stageIndex===1?'定時まで耐えろ。':'退勤まで、あと少し（たぶん）。',16,H-22);
-  }
-  function drawPlayer(){
-    const q=player.x+player.w/2, y=player.y; ctx.save();
-    if(invincible>0 && Math.floor(invincible*12)%2===0) ctx.globalAlpha=.25;
-    ctx.strokeStyle='#111'; ctx.lineWidth=4; ctx.lineCap='round';
-    ctx.beginPath(); ctx.arc(q,y+10,9,0,Math.PI*2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(q,y+20); ctx.lineTo(q,y+43); ctx.moveTo(q,y+28); ctx.lineTo(q-13,y+35); ctx.moveTo(q,y+28); ctx.lineTo(q+13,y+33); ctx.moveTo(q,y+43); ctx.lineTo(q-11,y+60); ctx.moveTo(q,y+43); ctx.lineTo(q+12,y+60); ctx.stroke(); ctx.restore();
-  }
-  function drawObstacle(o){
-    ctx.save(); if(o.hit) ctx.globalAlpha=.35;
-    if(o.type.kind==='train'){
-      ctx.fillStyle='#555'; ctx.fillRect(o.x,o.y+8,o.w,o.h-8); ctx.fillStyle='#eee';
-      for(let z=8; z<o.w-10; z+=25) ctx.fillRect(o.x+z,o.y+15,14,15);
-      ctx.font='20px serif'; ctx.fillText('🚃',o.x+5,o.y+28);
-    } else if(o.type.kind==='boss'){
-      ctx.font=`${Math.min(o.w,o.h*.62)}px serif`; ctx.fillText('👔',o.x,o.y+o.h*.65); ctx.fillStyle='#111'; ctx.font='900 10px sans-serif'; ctx.fillText('上司',o.x+8,o.y+o.h-5);
-    } else if(o.type.kind==='desk'){
-      ctx.fillStyle='#222'; ctx.fillRect(o.x,o.y+8,o.w,12); ctx.fillRect(o.x+8,o.y+20,7,o.h-20); ctx.fillRect(o.x+o.w-15,o.y+20,7,o.h-20); ctx.font='22px serif'; ctx.fillText('🪑',o.x+o.w*.42,o.y+10);
-    } else {
-      ctx.font=`${Math.min(o.w,o.h)-4}px serif`; ctx.fillText(o.type.icon,o.x,o.y+o.h-3);
-    }
-    ctx.restore();
-  }
-  function loop(now){
-    if(!running) return;
-    const dt = Math.min((now-last)/1000, .032); last = now;
-    if(!transition){
-      speed = Math.min(560, 270 + stageIndex*35 + distance*.035); distance += dt*speed/13; invincible=Math.max(0,invincible-dt);
-      player.vy += 1950*dt; player.y += player.vy*dt;
-      if(player.y >= groundY()-player.h){ player.y=groundY()-player.h; player.vy=0; player.onGround=true; }
-      spawnTimer -= dt;
-      if(spawnTimer<=0){ spawnOne(); spawnTimer=Math.max(.72,1.35-stageIndex*.12-distance*.00025)+Math.random()*.55; }
-      for(const o of obstacles){
-        o.x -= speed*dt;
-        if(!o.hit && collides(player,o)){
-          o.hit=true;
-          if(o.type.kind==='paid'){ invincible=4; say('有給！ 4秒だけ無敵'); }
-          else if(invincible<=0){ stress += o.type.damage; say(o.type.label); if(stress>=100){ stress=100; updateUI(); gameOver(); return; } }
-        }
-      }
-      obstacles=obstacles.filter(o=>o.x+o.w>-30);
-      if(distance>=stages[stageIndex].goal) nextStage();
-    }
-    updateUI(); drawBackground(); obstacles.forEach(drawObstacle); drawPlayer(); requestAnimationFrame(loop);
-  }
-  resize(); resetGame(); drawBackground(); drawPlayer();
-  window.addEventListener('resize', () => { resize(); if(!running){ resetGame(); drawBackground(); drawPlayer(); } });
-  canvas.addEventListener('pointerdown', (e) => { e.preventDefault(); jump(); });
-  $('#startB').addEventListener('click', startGame);
-  $('#retry').addEventListener('click', startGame);
-  $('#again').addEventListener('click', startGame);
-})();</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>限界リーマン純</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#061429;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif}
+body{touch-action:none;user-select:none;-webkit-user-select:none}
+canvas{display:block;width:100vw;height:100dvh}
+.hud{position:fixed;z-index:3;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 8px) 12px 0;pointer-events:none;text-shadow:0 2px 0 #001}
+.top{display:flex;align-items:center;gap:10px;background:rgba(2,16,34,.9);border:2px solid #59d7ff;border-radius:10px;padding:7px 9px;box-shadow:0 0 0 2px #001 inset}
+.faceMini{width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;object-position:50% 42%}
+.stat{flex:1;min-width:0}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:900;font-size:12px}
+.stage{font-size:15px;color:#ffd437;white-space:nowrap}
+.meter{height:10px;border:2px solid #fff;border-radius:7px;background:#19364c;margin-top:4px;overflow:hidden}
+.meter>i{display:block;height:100%;width:20%;background:linear-gradient(90deg,#36f36c,#ffe238,#ff4a34)}
+.distance{font-size:14px;color:#5be8ff;white-space:nowrap}
+.progress{height:7px;border:1px solid #fff;background:#17324d;margin-top:5px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0;background:#31e1ff}
+.toast{position:fixed;z-index:6;top:22%;left:50%;transform:translate(-50%,-10px);opacity:0;background:#fff;color:#07152a;border:3px solid #07152a;border-radius:8px;padding:8px 13px;font-weight:1000;box-shadow:5px 5px 0 #07152a;transition:.12s;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.overlay{position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 50% 25%,rgba(16,77,126,.96),rgba(2,13,28,.98) 62%)}
+.overlay.hide{display:none}
+.card{width:min(460px,100%);background:#092443;border:4px solid #fff;border-radius:16px;padding:22px;text-align:center;box-shadow:8px 8px 0 #00152c,0 0 25px rgba(52,218,255,.35)}
+.logo{font-weight:1000;font-size:clamp(40px,12vw,64px);line-height:.92;letter-spacing:-4px;text-shadow:3px 3px 0 #001,5px 5px 0 #ff9d00;margin:9px 0}
+.logo b{color:#ffd62b}
+.kicker{font-size:11px;font-weight:900;color:#6be6ff;letter-spacing:.12em}
+.card p{line-height:1.7;color:#d6eaff}
+button{border:3px solid #001b35;background:#ffd329;color:#07152a;font-size:20px;font-weight:1000;padding:14px 18px;border-radius:10px;width:100%;box-shadow:0 5px 0 #d98000;touch-action:manipulation}
+button:active{transform:translateY(3px);box-shadow:0 2px 0 #d98000}
+.help{font-size:11px;color:#93cde8;margin-top:12px}
+.stageclear{position:fixed;z-index:9;inset:0;display:grid;place-items:center;background:rgba(1,11,26,.9);text-align:center}
+.stageclear.hide{display:none}
+.stageclear strong{font-size:46px;color:#ffd62b;text-shadow:4px 4px 0 #e54c00}
+.stageclear p{font-weight:900;font-size:18px}
+@media(max-width:480px){.hud{padding-left:7px;padding-right:7px}.top{gap:7px;padding:6px}.faceMini{width:31px;height:31px}.stage{font-size:13px}.distance{font-size:12px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div class="hud"><div class="top"><img id="miniFace" class="faceMini" alt=""><div class="stat"><div class="line"><span id="stageName" class="stage">STAGE 1 🚃 通勤地獄</span><span id="mentalText">限界度 20%</span></div><div class="meter"><i id="mentalBar"></i></div><div class="line" style="margin-top:4px"><span id="goalLabel">会社まで</span><span id="distance" class="distance">900m</span></div><div class="progress"><i id="progressBar"></i></div></div></div></div>
+<div id="toast" class="toast"></div>
+<div id="start" class="overlay"><div class="card"><div class="kicker">SALARYMAN SURVIVAL ACTION</div><div class="logo">限界リーマン<br><b>純</b></div><p>通勤・仕事・残業。<br>3つの地獄を突破して、今日も退勤せよ。</p><button id="startBtn">出社する ▶</button><div class="help">タップ / クリック / SPACE：ジャンプ　2回押し：二段ジャンプ</div></div></div>
+<div id="stageClear" class="stageclear hide"><div><strong id="clearTitle">STAGE CLEAR!</strong><p id="clearText"></p></div></div>
+<div id="over" class="overlay hide"><div class="card"><div class="kicker">GAME OVER</div><div class="logo">純、<b>限界。</b></div><p id="overText"></p><button id="retryBtn">翌日も出社する</button></div></div>
+<div id="win" class="overlay hide"><div class="card"><div class="kicker">ALL CLEAR</div><div class="logo">純、<b>退勤。</b></div><p>今日も、よく走った。<br>明日は明日の会議がある。</p><button id="againBtn">また月曜日</button></div></div>
+<script>
+(function(){
+'use strict';
+var normalSrc='normal_face.jpg';
+var jumpSrc='jump_face.jpg';
+var faceNormal=new Image(), faceJump=new Image();
+faceNormal.src=normalSrc; faceJump.src=jumpSrc;
+document.getElementById('miniFace').src=normalSrc;
+var c=document.getElementById('game'), ctx=c.getContext('2d');
+var startEl=document.getElementById('start'), overEl=document.getElementById('over'), winEl=document.getElementById('win');
+var clearEl=document.getElementById('stageClear'), toastEl=document.getElementById('toast');
+var stageName=document.getElementById('stageName'), mentalText=document.getElementById('mentalText'), mentalBar=document.getElementById('mentalBar');
+var distanceEl=document.getElementById('distance'), progressBar=document.getElementById('progressBar'), goalLabel=document.getElementById('goalLabel');
+var W=0,H=0,DPR=1,last=0,running=false,transition=false,stageIndex=0,dist=0,mental=20,speed=290,spawnTimer=1,invincible=0;
+var player, objects=[], particles=[], toastTimer=0;
+var STAGES=[
+{name:'🚃 通勤地獄',goal:900,label:'会社まで',sky1:'#8bd9ff',sky2:'#dff6ff',ground:'#304e70',clear:'無事、出社してしまった。',baseSpeed:290,types:[{kind:'train',label:'長い電車',w:190,h:55,damage:18,weight:2},{kind:'crowd',label:'満員です',w:64,h:63,damage:16,weight:3},{kind:'gate',label:'改札ラッシュ',w:47,h:55,damage:15,weight:2},{kind:'bag',label:'PC忘れた',w:42,h:42,damage:13,weight:2}]},
+{name:'🏢 勤務地獄',goal:1100,label:'定時まで',sky1:'#bfe4ff',sky2:'#eef8ff',ground:'#536679',clear:'なんとか、定時……ではない。',baseSpeed:320,types:[{kind:'boss',label:'部長「ちょっといい？」',w:92,h:128,damage:28,weight:2},{kind:'desk',label:'会議が長い',w:150,h:48,damage:20,weight:2},{kind:'excel',label:'謎のExcel',w:48,h:48,damage:17,weight:3},{kind:'printer',label:'紙詰まり',w:58,h:61,damage:18,weight:2},{kind:'mail',label:'未読99+',w:48,h:48,damage:18,weight:2,air:true}]},
+{name:'🌙 残業地獄',goal:1250,label:'退勤まで',sky1:'#071936',sky2:'#164c72',ground:'#20283a',clear:'',baseSpeed:350,types:[{kind:'megaBoss',label:'ラスボス部長',w:108,h:150,damage:34,weight:2},{kind:'tasks',label:'タスクの山',w:78,h:88,damage:25,weight:3},{kind:'clock',label:'緊急対応',w:57,h:57,damage:21,weight:2},{kind:'mail',label:'至急お願いします',w:50,h:50,damage:22,weight:3,air:true},{kind:'desk',label:'終わらない会議',w:165,h:50,damage:24,weight:2}]}
+];
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);c.width=Math.floor(W*DPR);c.height=Math.floor(H*DPR);c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);if(player&&!running){player.y=groundY()-player.h;}}
+function groundY(){return H*0.78;}
+function resetGame(){stageIndex=0;dist=0;mental=20;objects=[];particles=[];invincible=0;spawnTimer=.9;speed=STAGES[0].baseSpeed;transition=false;player={x:Math.max(58,W*.16),y:groundY()-76,w:48,h:76,vy:0,jumps:0,onGround:true};updateHud();}
+function startGame(){resetGame();startEl.classList.add('hide');overEl.classList.add('hide');winEl.classList.add('hide');running=true;last=performance.now();requestAnimationFrame(loop);}
+function jump(){if(!running||transition)return;if(player.jumps<2){player.vy=player.jumps===0?-790:-700;player.jumps++;player.onGround=false;burst(player.x+20,player.y+player.h,5);}}
+function say(msg){toastEl.textContent=msg;toastEl.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.classList.remove('on');},700);}
+function weightedType(stage){var bag=[];for(var i=0;i<stage.types.length;i++)for(var k=0;k<stage.types[i].weight;k++)bag.push(stage.types[i]);return bag[Math.floor(Math.random()*bag.length)];}
+function spawnObject(){var s=STAGES[stageIndex];var r=Math.random();if(r<.075){objects.push({kind:'paid',label:'有給！',x:W+30,y:groundY()-95,w:46,h:46,damage:0,hit:false,item:true});return;}if(r<.13){objects.push({kind:'coffee',label:'コーヒー +回復',x:W+30,y:groundY()-130,w:42,h:42,damage:0,hit:false,item:true});return;}var t=weightedType(s);var yy=t.air?groundY()-145:groundY()-t.h;objects.push({kind:t.kind,label:t.label,x:W+25,y:yy,w:t.w,h:t.h,damage:t.damage,hit:false,item:false});}
+function collision(a,b){return a.x+8 < b.x+b.w-5 && a.x+a.w-8 > b.x+5 && a.y+8 < b.y+b.h-4 && a.y+a.h-3 > b.y+5;}
+function updateHud(){var s=STAGES[stageIndex];stageName.textContent='STAGE '+(stageIndex+1)+'  '+s.name;mentalText.textContent='限界度 '+Math.round(mental)+'%';mentalBar.style.width=Math.min(100,mental)+'%';goalLabel.textContent=s.label;distanceEl.textContent=Math.max(0,Math.ceil(s.goal-dist))+'m';progressBar.style.width=Math.min(100,dist/s.goal*100)+'%';}
+function burst(x,y,n){for(var i=0;i<n;i++)particles.push({x:x,y:y,vx:(Math.random()-.5)*130,vy:-30-Math.random()*90,life:.35+Math.random()*.25});}
+function endGame(){running=false;document.getElementById('overText').innerHTML='STAGE '+(stageIndex+1)+'「'+STAGES[stageIndex].name.replace(/^[^ ]+ /,'')+'」で心が折れた。<br>ゴールまで <b>'+Math.max(0,Math.ceil(STAGES[stageIndex].goal-dist))+'m</b>';setTimeout(function(){overEl.classList.remove('hide');},180);}
+function stageClear(){transition=true;clearEl.classList.remove('hide');document.getElementById('clearTitle').textContent='STAGE '+(stageIndex+1)+' CLEAR!';document.getElementById('clearText').textContent=STAGES[stageIndex].clear;setTimeout(function(){stageIndex++;if(stageIndex>=STAGES.length){running=false;clearEl.classList.add('hide');winEl.classList.remove('hide');return;}dist=0;objects=[];particles=[];mental=Math.max(12,mental-18);speed=STAGES[stageIndex].baseSpeed;spawnTimer=.8;player.y=groundY()-player.h;player.vy=0;player.jumps=0;player.onGround=true;transition=false;clearEl.classList.add('hide');updateHud();},1400);}
+function drawBackground(){var s=STAGES[stageIndex];var grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,s.sky1);grad.addColorStop(1,s.sky2);ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);if(stageIndex===0){ctx.fillStyle='rgba(24,80,125,.30)';for(var i=0;i<8;i++){var bx=i*115-((dist*2.1)%115);var bh=90+(i%3)*35;ctx.fillRect(bx,groundY()-bh,74,bh);}ctx.fillStyle='#a9bdc9';ctx.fillRect(0,groundY()-17,W,17);ctx.fillStyle='#24384a';ctx.fillRect(0,groundY(),W,H-groundY());ctx.strokeStyle='#9dc7df';ctx.lineWidth=3;for(var r=-((dist*6)%76);r<W;r+=76){ctx.beginPath();ctx.moveTo(r,groundY()+30);ctx.lineTo(r+42,groundY()+30);ctx.stroke();}}else{ctx.fillStyle=stageIndex===2?'#18243a':'#d7e2e9';var off=(dist*2)%105;for(var j=-1;j<8;j++){var ox=j*105-off;ctx.fillRect(ox,groundY()-160,78,160);ctx.fillStyle=stageIndex===2?'#ffd75a':'#86b8d6';ctx.fillRect(ox+12,groundY()-140,20,24);ctx.fillRect(ox+45,groundY()-140,20,24);ctx.fillStyle=stageIndex===2?'#18243a':'#d7e2e9';}ctx.fillStyle=stageIndex===2?'#171b27':'#6a7987';ctx.fillRect(0,groundY(),W,H-groundY());ctx.fillStyle=stageIndex===2?'#f7dc63':'#31495e';ctx.fillRect(0,groundY()-5,W,5);}}
+function drawFace(cx,cy,w,h,img){ctx.save();ctx.beginPath();ctx.ellipse(cx,cy,w*.46,h*.49,0,0,Math.PI*2);ctx.clip();ctx.drawImage(img,cx-w*.52,cy-h*.57,w*1.04,h*1.15);ctx.restore();ctx.strokeStyle='#07152a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(cx,cy,w*.46,h*.49,0,0,Math.PI*2);ctx.stroke();}
+function drawPlayer(){var px=player.x,py=player.y,air=!player.onGround;ctx.save();if(invincible>0&&Math.floor(invincible*14)%2===0)ctx.globalAlpha=.35;ctx.fillStyle='#092442';ctx.strokeStyle='#061326';ctx.lineWidth=3;ctx.fillRect(px+13,py+34,26,30);ctx.strokeRect(px+13,py+34,26,30);ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(px+22,py+35);ctx.lineTo(px+30,py+35);ctx.lineTo(px+26,py+49);ctx.fill();ctx.fillStyle='#e63232';ctx.fillRect(px+24,py+40,5,15);ctx.strokeStyle='#092442';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(px+16,py+42);ctx.lineTo(px+3,py+53);ctx.moveTo(px+36,py+43);ctx.lineTo(px+47,py+35);ctx.stroke();ctx.beginPath();if(air){ctx.moveTo(px+19,py+63);ctx.lineTo(px+8,py+74);ctx.moveTo(px+34,py+63);ctx.lineTo(px+45,py+72);}else{ctx.moveTo(px+19,py+63);ctx.lineTo(px+12,py+75);ctx.moveTo(px+34,py+63);ctx.lineTo(px+39,py+75);}ctx.stroke();drawFace(px+26,py+23,43,45,air?faceJump:faceNormal);ctx.fillStyle='#2c1d13';ctx.fillRect(px-1,py+50,14,15);ctx.strokeStyle='#080808';ctx.lineWidth=2;ctx.strokeRect(px-1,py+50,14,15);ctx.restore();}
+function drawObject(o){ctx.save();if(o.hit)ctx.globalAlpha=.35;var x=o.x,y=o.y,w=o.w,h=o.h;if(o.kind==='train'){ctx.fillStyle='#3b536d';ctx.fillRect(x,y+6,w,h-6);ctx.fillStyle='#dbe9ef';for(var i=10;i<w-15;i+=34)ctx.fillRect(x+i,y+15,20,17);ctx.fillStyle='#ef4e3c';ctx.fillRect(x,y+38,w,6);ctx.fillStyle='#132437';ctx.fillRect(x+6,y+h-5,w-12,5);}else if(o.kind==='boss'||o.kind==='megaBoss'){ctx.fillStyle='#55211d';ctx.beginPath();ctx.arc(x+w*.52,y+24,w*.28,0,Math.PI*2);ctx.fill();ctx.fillStyle='#222b3b';ctx.fillRect(x+w*.18,y+44,w*.68,h-48);ctx.fillStyle='#f6d0af';ctx.fillRect(x+w*.3,y+15,w*.44,32);ctx.fillStyle='#d63227';ctx.fillRect(x+w*.46,y+52,8,h*.38);ctx.fillStyle='#fff';ctx.font='900 11px sans-serif';ctx.fillText('上司',x+w*.34,y+h-8);}else if(o.kind==='desk'){ctx.fillStyle='#684021';ctx.fillRect(x,y+5,w,18);ctx.fillRect(x+10,y+23,8,h-23);ctx.fillRect(x+w-18,y+23,8,h-23);ctx.fillStyle='#dcb174';ctx.fillRect(x,y,w,8);}else if(o.kind==='crowd'){ctx.font='32px serif';ctx.fillText('👥',x,y+38);ctx.fillText('👥',x+24,y+58);}else{var emoji={gate:'🚉',bag:'💼',excel:'📊',printer:'🖨️',mail:'💌',tasks:'📚',clock:'⏰',paid:'🏝️',coffee:'☕'}[o.kind]||'💥';ctx.font=Math.max(30,Math.min(w,h)-4)+'px serif';ctx.fillText(emoji,x,y+h-4);}if(!o.item&&(o.kind==='boss'||o.kind==='megaBoss')){ctx.fillStyle='#fff';ctx.strokeStyle='#061326';ctx.lineWidth=2;ctx.font='900 10px sans-serif';var lab=o.kind==='megaBoss'?'まだ帰らないの？':'ちょっといい？';var tw=ctx.measureText(lab).width+12;ctx.fillRect(x+w*.55,y-9,tw,20);ctx.strokeRect(x+w*.55,y-9,tw,20);ctx.fillStyle='#061326';ctx.fillText(lab,x+w*.55+6,y+5);}ctx.restore();}
+function drawParticles(dt){for(var i=particles.length-1;i>=0;i--){var p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt;ctx.fillStyle='rgba(255,255,255,'+Math.max(0,p.life*2)+')';ctx.fillRect(p.x,p.y,4,4);if(p.life<=0)particles.splice(i,1);}}
+function loop(now){if(!running)return;var dt=Math.min((now-last)/1000,.032);last=now;if(!transition){var s=STAGES[stageIndex];speed=Math.min(s.baseSpeed+170,s.baseSpeed+dist*.065);dist+=dt*speed/13;invincible=Math.max(0,invincible-dt);player.vy+=2050*dt;player.y+=player.vy*dt;if(player.y>=groundY()-player.h){player.y=groundY()-player.h;player.vy=0;player.onGround=true;player.jumps=0;}spawnTimer-=dt;if(spawnTimer<=0){spawnObject();spawnTimer=Math.max(.76,1.42-stageIndex*.12-dist*.00022)+Math.random()*.5;}for(var i=0;i<objects.length;i++){var o=objects[i];o.x-=speed*dt;if(!o.hit&&collision(player,o)){o.hit=true;if(o.kind==='paid'){invincible=4;say('有給！ 4秒だけ無敵');burst(o.x,o.y,14);}else if(o.kind==='coffee'){mental=Math.max(0,mental-18);say('コーヒーで限界度 -18');burst(o.x,o.y,10);}else if(invincible<=0){mental+=o.damage;say(o.label);burst(player.x+30,player.y+35,12);if(mental>=100){mental=100;updateHud();endGame();return;}}}}objects=objects.filter(function(o){return o.x+o.w>-50;});if(dist>=s.goal)stageClear();}drawBackground();for(var j=0;j<objects.length;j++)drawObject(objects[j]);drawPlayer();drawParticles(dt);updateHud();requestAnimationFrame(loop);}
+function input(e){if(e)e.preventDefault();jump();}
+resize();resetGame();drawBackground();drawPlayer();addEventListener('resize',resize);c.addEventListener('pointerdown',input,{passive:false});document.addEventListener('keydown',function(e){if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}});document.getElementById('startBtn').addEventListener('click',function(e){e.preventDefault();startGame();});document.getElementById('startBtn').addEventListener('touchend',function(e){e.preventDefault();startGame();},{passive:false});document.getElementById('retryBtn').addEventListener('click',startGame);document.getElementById('againBtn').addEventListener('click',startGame);
+})();
+</script>
+</body>
+</html>
