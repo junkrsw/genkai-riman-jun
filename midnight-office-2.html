@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>午前0時のダイナックス2 ― 密室のツムラ ―</title>
+<style>
+:root{--bg:#080b12;--panel:#111724;--line:#33415f;--text:#eef2ff;--sub:#aeb8d1;--red:#ff5c6c;--gold:#ffd166;--blue:#77aaff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#182238,#080b12 55%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;min-height:100vh}.app{max-width:760px;margin:auto;min-height:100vh;padding:18px 14px 40px}.head{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--sub);font-size:12px;margin-bottom:12px}.badge{border:1px solid var(--line);border-radius:999px;padding:6px 10px}.card{background:rgba(17,23,36,.96);border:1px solid #28334d;border-radius:18px;padding:20px;box-shadow:0 18px 50px #0008}.chapter{font-size:12px;color:var(--blue);letter-spacing:.14em}.title{font-size:28px;font-weight:800;margin:8px 0}.scene{min-height:290px;display:flex;flex-direction:column;justify-content:center}.text{font-size:17px;line-height:1.9;white-space:pre-line}.speaker{color:var(--gold);font-weight:700;margin-bottom:6px}.choices{display:grid;gap:10px;margin-top:18px}button{width:100%;border:1px solid #3b4968;background:#192238;color:white;border-radius:13px;padding:14px 13px;font-size:15px;text-align:left;cursor:pointer}button:hover{background:#23304c}.primary{background:#315fa8;border-color:#5c8bd1;text-align:center;font-weight:700}.danger{background:#602630;border-color:#a64654}.evidence{margin-top:14px;border-top:1px solid #29344e;padding-top:12px;color:var(--sub);font-size:13px}.ev{display:inline-block;border:1px solid #405173;border-radius:8px;padding:5px 7px;margin:3px}.hearts{color:var(--red);font-size:18px;letter-spacing:2px}.flash{color:var(--gold);font-weight:800}.end{text-align:center;padding:40px 5px}.end h1{font-size:36px;margin:10px}.small{font-size:12px;color:#8792aa;margin-top:22px}.robot{font-size:72px;text-align:center;margin:15px 0;filter:drop-shadow(0 0 20px #78aaff55)}
+</style></head>
+<body><main class="app"><div class="head"><span>DYNA-X / SOUND NOVEL</span><span id="life"></span></div><section class="card"><div id="game"></div><div id="evidence" class="evidence"></div></section></main>
+<script>
+const G=document.getElementById('game'),E=document.getElementById('evidence'),L=document.getElementById('life');
+let evidence=[], hearts=3, investigated=new Set();
+const add=e=>{if(!evidence.includes(e))evidence.push(e)};
+function hud(){L.innerHTML=hearts<3?'推理力 <span class="hearts">'+('♥'.repeat(hearts)+'♡'.repeat(3-hearts))+'</span>':'';E.innerHTML=evidence.length?'証拠品：'+evidence.map(x=>`<span class="ev">${x}</span>`).join(''):'証拠品：なし'}
+function view(ch,title,text,buttons=[],speaker=''){G.innerHTML=`<div class="chapter">${ch}</div><div class="scene"><div class="title">${title}</div>${speaker?`<div class="speaker">${speaker}</div>`:''}<div class="text">${text}</div><div class="choices">${buttons.map((b,i)=>`<button class="${b.c||''}" onclick="${b.a}">${b.t}</button>`).join('')}</div></div>`;hud()}
+function start(){evidence=[];hearts=3;investigated.clear();view('PART 2','午前0時のダイナックス2','――密室のツムラ――\n\n※この物語に登場する会社・人物・事件はフィクションです。',[{t:'事件を始める',a:'incident()',c:'primary'}])}
+function incident(){view('事件発生編','金曜日 23:12','産業用ロボットメーカー「ダイナックス」。\n残業中、イシズが第3デモ会議室の異変に気づいた。\n\n電子錠は施錠されたまま。マスターキーで開けると――',[{t:'部屋に入る',a:'body()',c:'danger'}])}
+function body(){add('現場写真');view('事件発生編','密室','ツムラシュウジが床に倒れていた。胸には深い刺創。\nだが、凶器らしい刃物はない。\n\n壁際には、ネジ締め実演用の産業用ロボットアーム。先端には電動ドライバー。\nロボットは静かに待機位置で停止している。\n\n電子錠の記録は「22:08 ツムラ入室」。その後、誰も入っていない。',[{t:'捜査を開始する',a:'investigate()',c:'primary'}])}
+const spots={
+ room:['第3デモ会議室','床には黄色い立ち位置マーク。ロボットの先端には電動ドライバー。工具がなくなった形跡はない。','電動ドライバー'],
+ lock:['電子錠ログ','22:08 ツムラ入室。以降、イシズが23:12にマスター解錠するまで入退室なし。ログ改ざんの痕跡もない。','電子錠ログ'],
+ phone:['ツムラのスマホ','削除されずに残ったメッセージ。\n\n21:56 シゲ\n「22:30、第3会議室に来て。床の黄色い印のところに立ってデモ機を見てほしい」','シゲのメッセージ'],
+ safety:['安全管理装置','ロボット本体とは独立した安全管理ログを発見。\n22:30:14 ROBOT MOTION DETECTED\n22:30:18 SAFETY SENSOR ACTIVATED\n22:30:19 EMERGENCY STOP','安全装置ログ'],
+ server:['社内サーバー','22:30のロボット実行ログだけが消されている。しかし自動バックアップに変更履歴が残っていた。最終更新者：WATANABE.S','プログラム履歴'],
+ people:['社員への聞き込み','22:30、シゲはクロサワ、タカコ、イシズと別室にいた。全員が認めている。つまりシゲには「現場にいなかった」という強固なアリバイがある。','シゲのアリバイ']
+};
+function investigate(){let opts=Object.entries(spots).filter(([k])=>!investigated.has(k)).map(([k,v])=>({t:'調べる：'+v[0],a:`spot('${k}')`}));if(investigated.size>=4)opts.push({t:'捜査を終了して、全員を会議室に集める',a:'confirmDeduction()',c:'primary'});view('捜査編','どこを調べる？','証拠を集め、密室の矛盾を解け。',opts)}
+function spot(k){investigated.add(k);let s=spots[k];add(s[2]);view('捜査編',s[0],s[1],[{t:'捜査を続ける',a:'investigate()',c:'primary'}])}
+function confirmDeduction(){if(investigated.size<6){view('捜査編','まだ調べられる','まだ未確認の場所がある。推理に必要な証拠を取りこぼしているかもしれない。',[{t:'捜査に戻る',a:'investigate()'}]);return}hearts=3;view('推理編','全員集合','深夜の会議室。\nクロサワ、タカコ、イシズ、そしてシゲ。\n\nここから先、推理を3回誤れば事件は迷宮入りする。',[{t:'密室を解く',a:'q1()',c:'primary'}])}
+function wrong(back,msg='その証拠では話がつながらない。'){hearts--;if(hearts<=0){bad();return}view('推理編','反論された',msg+`\n\n推理力が1減った。`,[{t:'考え直す',a:back,c:'danger'}])}
+function q1(){view('推理編','第一の謎','ツムラが殺された22:30。\n誰も密室へ入っていない。\n\nそれでも殺害が可能だったことを示す証拠は？',[{t:'電子錠ログ',a:"wrong('q1()')"},{t:'安全装置ログ',a:'q1ok()'},{t:'シゲのアリバイ',a:"wrong('q1()')"},{t:'現場写真',a:"wrong('q1()')"}])}
+function q1ok(){view('推理編','22:30','安全装置は記録していた。\n\n<span class="flash">22:30、あのロボットは確かに動いていた。</span>\n\n人間が入る必要などなかった。',[{t:'凶器を示す',a:'q2()',c:'primary'}])}
+function q2(){view('推理編','第二の謎','凶器は現場から消えていない。\nでは、ツムラを刺したものは？',[{t:'電動ドライバー',a:'q2ok()'},{t:'電子錠',a:"wrong('q2()')"},{t:'スマホ',a:"wrong('q2()')"},{t:'黄色い床マーク',a:"wrong('q2()')"}])}
+function q2ok(){view('推理編','消えなかった凶器','ロボットアームの先端。\nネジ締め用の電動ドライバー。\n\n犯行後、アームは待機位置へ戻った。凶器は最初から全員の目の前にあった。',[{t:'ロボットを動かした人物を追う',a:'q3()',c:'primary'}])}
+function q3(){view('推理編','第三の謎','何者かが殺害動作を仕込み、その記録を消した。\n変更した人物につながる証拠は？',[{t:'プログラム履歴',a:'q3ok()'},{t:'電子錠ログ',a:"wrong('q3()')"},{t:'現場写真',a:"wrong('q3()')"},{t:'シゲのアリバイ',a:"wrong('q3()')"}])}
+function q3ok(){view('推理編','WATANABE.S','自動バックアップには消せなかった変更履歴がある。\n\n最終更新者――WATANABE.S。\n\nシゲ「俺が作ったプログラムなのは認める。でも誰かが使ったかもしれないだろ？」',[{t:'決定的な証拠を示す',a:'q4()',c:'primary'}])}
+function q4(){view('推理編','シゲの反論','殺人には、22:30にツムラを黄色い印の上へ立たせる必要があった。\n\nそれを仕組んだ人物を証明する証拠は？',[{t:'シゲのメッセージ',a:'q4ok()'},{t:'安全装置ログ',a:"wrong('q4()')"},{t:'電動ドライバー',a:"wrong('q4()')"},{t:'電子錠ログ',a:"wrong('q4()')"}])}
+function q4ok(){view('推理編','21:56','ツムラのスマホには残っていた。\n\nシゲ「22:30、第3会議室に来て。床の黄色い印のところに立ってデモ機を見てほしい」\n\nシゲ「…………」',[{t:'犯人を指名する',a:'culprit()',c:'danger'}])}
+function culprit(){view('最終推理','犯人は誰だ！','ツムラシュウジを殺害した犯人を指名せよ。',[{t:'クロサワジュン',a:"wrong('culprit()','クロサワを犯人とする証拠は成立しない。')"},{t:'ハシモトタカコ',a:"wrong('culprit()','タカコを犯人とする証拠は成立しない。')"},{t:'イシズ',a:"wrong('culprit()','イシズを犯人とする証拠は成立しない。')"},{t:'ワタナベシゲ',a:'truth()',c:'danger'}])}
+function truth(){view('TRUE END','犯人は――','「シゲ。お前だ。」\n\nシゲは横領の発覚を恐れ、ツムラを口封じしようとした。事前にロボットの動作を書き換え、22:30に自動実行。自分は別室にいることでアリバイを作った。\n\n電子錠は嘘をついていなかった。\n誰も密室には入っていない。\n\n殺したのはロボットではない。\n<span class="flash">ロボットに殺すよう命令した人間だった。</span>',[{t:'エピローグへ',a:'epilogue()',c:'primary'}])}
+function epilogue(){G.innerHTML=`<div class="end"><div class="chapter">TRUE END</div><div class="robot">🦾</div><h1>密室のツムラ</h1><p>午前0時。ダイナックスのロボットは、何事もなかったように待機位置で眠っていた。</p><p class="flash">事件は解決した。</p><button class="primary" onclick="start()">最初から遊ぶ</button><div class="small">午前0時のダイナックス2 / Fiction</div></div>`;L.innerHTML='';E.innerHTML=''}
+function bad(){G.innerHTML=`<div class="end"><div class="chapter">BAD END</div><h1>あなたは迷探偵です。</h1><p>推理は迷宮入りした。<br>真犯人は今も、この中にいる。</p><button class="danger" onclick="restartDeduction()">推理編の最初からやり直す</button></div>`;L.innerHTML='';E.innerHTML=''}
+function restartDeduction(){hearts=3;confirmDeduction()}
+start();
+</script></body></html>
