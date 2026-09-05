@@ -1,106 +1,37 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>午前0時のオフィス</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>午前0時のダイナックス</title>
 <style>
-:root{--bg:#07090d;--panel:rgba(7,10,16,.86);--line:rgba(255,255,255,.14);--text:#eef1f6;--muted:#9ba5b4;--accent:#d9e5ff;--danger:#ff6b6b;--good:#84d7b5}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#05070a;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",Meiryo,sans-serif}body{overflow:hidden}
-#game{position:relative;width:100vw;height:100dvh;min-height:560px;background:radial-gradient(circle at 68% 20%,#253044 0,transparent 30%),linear-gradient(180deg,#111722 0,#07090d 58%,#030407 100%);isolation:isolate}
-#game:before{content:"";position:absolute;inset:0;z-index:-2;background:repeating-linear-gradient(90deg,transparent 0 13%,rgba(255,255,255,.025) 13.2% 13.5%,transparent 13.7% 20%),linear-gradient(180deg,transparent 0 14%,rgba(130,160,190,.08) 14.2% 46%,transparent 46.3%),linear-gradient(90deg,rgba(255,255,255,.04),transparent 35%)}
-#game:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(rgba(255,255,255,.018) 50%,rgba(0,0,0,.018) 50%);background-size:100% 4px;mix-blend-mode:overlay;opacity:.5}
-.room{position:absolute;inset:0;transition:.6s ease;opacity:.95}.room.office{background:linear-gradient(0deg,rgba(0,0,0,.68),transparent 58%),radial-gradient(ellipse at 50% 65%,rgba(120,140,160,.08),transparent 35%)}
-.room.meeting{background:radial-gradient(circle at 50% 33%,rgba(218,232,255,.16),transparent 14%),linear-gradient(180deg,#101722,#07090d 70%)}
-.room.server{background:repeating-linear-gradient(90deg,rgba(90,140,210,.06) 0 8%,transparent 8% 13%),linear-gradient(180deg,#08101a,#040609)}
-.room.elevator{background:linear-gradient(90deg,#090b0e 0 25%,#1a1e24 25% 75%,#090b0e 75%)}
-.room.rooftop{background:radial-gradient(circle at 78% 18%,rgba(228,238,255,.5) 0 3%,transparent 3.3%),linear-gradient(180deg,#090f1a,#11151c 55%,#050608)}
-.clock{position:absolute;top:max(18px,env(safe-area-inset-top));left:20px;font:600 13px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:#cdd6e4;opacity:.8}.floor{position:absolute;top:max(18px,env(safe-area-inset-top));right:20px;font-size:12px;color:#8994a6;letter-spacing:.16em}
-.visual{position:absolute;left:0;right:0;top:8%;bottom:38%;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:rgba(235,241,255,.74);font-weight:700;letter-spacing:.16em;text-shadow:0 2px 12px #000}.visual .big{font-size:clamp(38px,10vw,90px);opacity:.16}.visual .monitor{padding:22px 28px;border:1px solid rgba(180,210,255,.18);background:rgba(3,8,15,.64);box-shadow:0 0 40px rgba(92,139,204,.08);font:500 clamp(16px,3vw,24px)/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;max-width:720px}.visual .red{color:#ff8585}.visual .green{color:#a3e6c9}
-.hud{position:absolute;top:50px;right:20px;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:65vw}.tag{font-size:10px;color:#aeb8c8;border:1px solid rgba(255,255,255,.12);padding:5px 8px;border-radius:999px;background:rgba(0,0,0,.24)}
-#textbox{position:absolute;left:clamp(10px,3vw,40px);right:clamp(10px,3vw,40px);bottom:max(12px,env(safe-area-inset-bottom));min-height:30%;max-height:45%;padding:18px 20px 16px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 70px rgba(0,0,0,.46);backdrop-filter:blur(12px)}
-#speaker{height:22px;font-size:12px;color:#9fb3d1;font-weight:700;letter-spacing:.12em}#text{font-size:clamp(15px,2.5vw,18px);line-height:1.95;min-height:80px;white-space:pre-wrap}.continue{position:absolute;right:17px;bottom:11px;font-size:16px;color:#b8c5d8;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}
-#choices{display:grid;gap:9px;margin-top:10px;max-height:31vh;overflow:auto}.choice{appearance:none;width:100%;border:1px solid rgba(255,255,255,.17);background:rgba(255,255,255,.055);color:#edf2fa;padding:12px 14px;border-radius:9px;text-align:left;font-size:14px;line-height:1.55;cursor:pointer}.choice:hover,.choice:active{background:rgba(255,255,255,.11);transform:translateY(-1px)}
-.topBtns{position:absolute;left:20px;top:45px;display:flex;gap:7px}.mini{border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.24);color:#aeb8c8;border-radius:8px;padding:6px 9px;font-size:10px;cursor:pointer}
-.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(2,3,5,.89);z-index:20}.overlay.show{display:flex}.card{width:min(720px,100%);max-height:84vh;overflow:auto;border:1px solid rgba(255,255,255,.14);border-radius:16px;background:#0b0f16;padding:24px}.card h1,.card h2{margin:0 0 14px}.card p{color:#c5cedc;line-height:1.9}.card button{width:100%;margin-top:10px;padding:13px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:#161d28;color:white;font-size:14px}.titleCard{text-align:center}.titleCard h1{font-size:clamp(34px,7vw,66px);letter-spacing:.12em;margin-bottom:8px}.titleCard .sub{color:#8590a1;letter-spacing:.22em;font-size:11px;margin-bottom:30px}.titleCard .note{font-size:12px;color:#788394}.ending{font-size:13px;letter-spacing:.13em;color:#9aa8bb}.ending.true{color:var(--good)}.ending.bad{color:var(--danger)}
-#logList p{border-bottom:1px solid rgba(255,255,255,.08);padding:8px 0;margin:0;font-size:12px;color:#9da8b8;line-height:1.6}
-@media(max-width:640px){#textbox{padding:14px 15px 13px;min-height:35%;max-height:50%}#text{line-height:1.8}.hud{top:77px}.visual{bottom:43%}.topBtns{top:42px}}
+*{box-sizing:border-box}body{margin:0;background:#05070b;color:#eef2f7;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}.game{min-height:100dvh;display:flex;flex-direction:column;background:radial-gradient(circle at 70% 15%,#243044 0,transparent 30%),linear-gradient(#111722,#05070b 70%);padding:18px}.top{display:flex;justify-content:space-between;color:#9ba7b8;font:12px monospace;letter-spacing:.12em}.scene{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:35px 10px;color:#9ca9bb}.monitor{border:1px solid #354155;background:#07101b;padding:22px;max-width:650px;width:100%;font:16px/1.9 monospace;box-shadow:0 0 45px #101c2b}.box{background:rgba(7,10,16,.94);border:1px solid #303846;border-radius:14px;padding:18px;max-width:820px;width:100%;margin:0 auto 10px}.speaker{font-size:12px;color:#9fb7d8;margin-bottom:8px;font-weight:bold}.text{font-size:16px;line-height:1.9;min-height:115px;white-space:pre-wrap}.choices{display:grid;gap:9px;margin-top:12px}button{border:1px solid #3a4658;background:#141b26;color:#f2f5f9;border-radius:9px;padding:13px;text-align:left;font-size:15px}button:active{background:#263246}.title{text-align:center;margin:auto;max-width:650px}.title h1{font-size:clamp(34px,8vw,64px);letter-spacing:.08em;margin:10px 0}.title p{line-height:1.8;color:#bbc3cf}.small{font-size:11px;color:#727e8e}.start{display:block;margin:25px auto 0;text-align:center;min-width:220px}.hidden{display:none}.evidence{color:#8fd6b8;font-size:12px;margin-top:8px}@media(max-width:600px){.game{padding:12px}.text{font-size:15px;min-height:150px}.scene{padding:20px 4px}.monitor{font-size:14px;padding:16px}}
 </style>
 </head>
 <body>
-<div id="game">
-  <div id="room" class="room office"></div>
-  <div class="clock" id="clock">23:52:18</div><div class="floor">7F / EAST OFFICE</div>
-  <div class="topBtns"><button class="mini" id="saveBtn">SAVE</button><button class="mini" id="loadBtn">LOAD</button><button class="mini" id="logBtn">LOG</button><button class="mini" id="soundBtn">SOUND ON</button></div>
-  <div class="hud" id="hud"></div>
-  <div class="visual" id="visual"><div class="big">OFFICE 7F</div></div>
-  <div id="textbox"><div id="speaker"></div><div id="text"></div><div id="choices"></div><div class="continue" id="continue">▼</div></div>
-
-  <div class="overlay show" id="titleOverlay"><div class="card titleCard"><div class="sub">SOUND NOVEL / MYSTERY</div><h1>午前0時のオフィス</h1><p>土曜の深夜。忘れ物を取りに戻った会社で、あなたは「自分がここにいた証拠」を見つける。</p><button id="startBtn">はじめる</button><button id="continueBtn">セーブデータから続ける</button><p class="note">イヤホン推奨。音はブラウザ内で生成されます。</p></div></div>
-  <div class="overlay" id="logOverlay"><div class="card"><h2>LOG</h2><div id="logList"></div><button id="closeLog">閉じる</button></div></div>
-  <div class="overlay" id="endOverlay"><div class="card titleCard"><div class="ending" id="endType"></div><h1 id="endTitle"></h1><p id="endText"></p><button id="retryBtn">最初から</button></div></div>
+<div class="game">
+<div class="top"><span>FUCHU / TOKYO</span><span id="clock">23:52</span></div>
+<div id="title" class="title"><div class="small">MYSTERY SOUND NOVEL / PROTOTYPE</div><h1>午前0時の<br>ダイナックス</h1><p>土曜の深夜。忘れ物を取りに戻った会社で、<br>あなたは「5分前の自分」を目撃する。</p><button class="start" id="start">はじめる</button><p class="small">本作はフィクションです。実在の人物・団体・事件とは関係ありません。</p></div>
+<div id="play" class="hidden" style="flex:1;display:none;flex-direction:column">
+<div class="scene" id="scene"></div>
+<div class="box"><div class="speaker" id="speaker"></div><div class="text" id="text"></div><div class="evidence" id="evidence"></div><div class="choices" id="choices"></div></div>
+</div>
 </div>
 <script>
-const $=s=>document.querySelector(s);
-const state={scene:'intro1',flags:{},evidence:[],log:[],sound:true};
-let typing=false, fullText='', timer=null, audio=null, hum=null;
 const scenes={
-intro1:{room:'office',speaker:'',visual:'<div class="big">SATURDAY 23:52</div>',text:'土曜日、23時52分。\n会社に戻った理由は、机に置き忘れた家の鍵だった。\n\n七階の照明は落ちている。いるはずのない誰かの気配だけが、妙に濃い。',next:'intro2'},
-intro2:{room:'office',speaker:'あなた',visual:'<div class="monitor">……カタ、カタ。</div>',text:'奥の会議室から、キーボードを叩くような音がした。\n警備員には「七階には誰も残っていない」と言われたばかりだ。',next:'intro3'},
-intro3:{room:'meeting',speaker:'',visual:'<div class="monitor">23:47　あなたはここにいた<br><span class="red">CAM-07 / ARCHIVE</span></div>',text:'会議室のモニターだけが点いていた。\n画面には、防犯カメラの静止画。\n\nそこに映っているのは——自分だった。\n時刻は「23:47」。五分前。',next:'paper'},
-paper:{room:'meeting',speaker:'',visual:'<div class="monitor">PRINTER OUTPUT<br>「この会社で、ひとりだけ嘘をついている。」</div>',text:'背後で複合機が動き、一枚の紙を吐き出した。\n\n「この会社で、ひとりだけ嘘をついている。」\n\nその下には、四人の名前が印刷されていた。\n高城部長、三浦、岸、真壁。',choices:[['会議室を調べる','meetingSearch'],['防犯カメラ室へ行く','cameraRoom'],['自分の机に戻る','desk']]},
-meetingSearch:{room:'meeting',speaker:'',visual:'<div class="monitor">予約：23:30〜00:00<br>予約者：M.MIURA</div>',text:'会議室予約端末には、今夜23時30分から「三浦」の予約が残っていた。\nだが三浦は今日、昼過ぎに「熱が出た。家から一歩も出ていない」とメッセージを送ってきた。',effect:()=>addEvidence('三浦の深夜予約'),next:'hub1'},
-cameraRoom:{room:'server',speaker:'',visual:'<div class="monitor">CAMERA LOG<br>23:47:02 / SOURCE: ARCHIVE_0912</div>',text:'監視端末を開く。23:47の映像は「LIVE」ではない。\n二週間前、9月12日のアーカイブ映像が、今夜の時刻表示を重ねて再生されている。\n\n誰かが「今夜の映像」に見せかけたのだ。',effect:()=>addEvidence('偽装された23:47映像'),next:'hub1'},
-desk:{room:'office',speaker:'',visual:'<div class="monitor">DESK DRAWER<br>USB MEMORY</div>',text:'自分の机の引き出しに、見覚えのないUSBメモリが入っていた。\nラベルには「0:00まで開くな」。\n差出人はない。',effect:()=>addEvidence('謎のUSBメモリ'),next:'hub1'},
-hub1:{room:'office',speaker:'',visual:'<div class="big">23:56</div>',text:'スマートフォンが震える。四人から、ほぼ同時にメッセージが届いた。',choices:[['高城部長のメッセージを見る','takagi'],['三浦のメッセージを見る','miura'],['岸のメッセージを見る','kishi'],['真壁のメッセージを見る','makabe']]},
-takagi:{room:'office',speaker:'高城部長',visual:'<div class="monitor">「会社？ 俺はもう家だ。<br>変なもの見ても触るなよ」</div>',text:'こちらが会社にいることを伝えていないのに、高城は「変なもの見ても触るな」と言った。\n\nなぜ、何かがあると知っている？',effect:()=>{state.flags.takagi=true;addEvidence('高城の先回りした発言')},next:'hub2'},
-miura:{room:'office',speaker:'三浦',visual:'<div class="monitor">「まだ会社？ 私はずっと家。<br>会議室なんか予約してないよ」</div>',text:'予約のことを聞く前から「会議室なんか予約してない」と返ってきた。\n奇妙だ。だが予約システムは共有で、他人が名前を使うこともできる。',effect:()=>{state.flags.miura=true;addEvidence('三浦の予約否定')},next:'hub2'},
-kishi:{room:'office',speaker:'岸（総務）',visual:'<div class="monitor">「七階は23:30から設備点検。<br>エレベーターは一度7Fに戻る設定です」</div>',text:'岸によれば、エレベーターが七階へ戻るのは設備点検モードの仕様らしい。\n怪談ではなかった。少しだけ安心して、少しだけがっかりした。',effect:()=>{state.flags.kishi=true;addEvidence('エレベーター点検設定')},next:'hub2'},
-makabe:{room:'server',speaker:'真壁（システム）',visual:'<div class="monitor">「監視システムは外部から触れない。<br>社内端末からしか無理」</div>',text:'つまり23:47の偽装映像を仕込んだ人物は、今日か、それ以前に社内端末を操作している。\nログを消しても、端末IDまでは別系統に残る。',effect:()=>{state.flags.makabe=true;addEvidence('偽装には社内端末が必要')},next:'hub2'},
-hub2:{room:'office',speaker:'',visual:'<div class="big">23:58</div>',text:'午前0時まで、あと二分。\nどこを調べる？',choices:[['USBメモリを開く','usb'],['会議室端末の操作履歴を見る','terminal'],['非常階段から屋上へ行く','roof']]},
-usb:{room:'server',speaker:'',visual:'<div class="monitor"><span class="green">INTERNAL AUDIT</span><br>架空請求 18,400,000円<br>承認者：T.TAKAGI</div>',text:'USBには内部監査用の資料が入っていた。\n架空の外注費、合計1840万円。承認者は高城。\n\n最後のファイル名は「MIURA_証言.wav」。',effect:()=>addEvidence('高城の架空請求資料'),next:'audioFile'},
-audioFile:{room:'server',speaker:'三浦の録音',visual:'<div class="monitor">VOICE MEMO / 00:41</div>',text:'「二週間前の夜、私が会議室で高城さんと揉めてるのを見た人がいる。だから私の予約履歴を使って、私を犯人に見せたいんだと思う」\n\n録音の末尾で、ドアが開く音がした。',effect:()=>addEvidence('三浦の証言録音'),next:'preFinal'},
-terminal:{room:'meeting',speaker:'',visual:'<div class="monitor">LAST LOGIN<br>USER: T.TAKAGI<br>DEVICE: MTG-07<br>21:18</div>',text:'会議室端末の最終ログインは今夜21時18分。\nユーザーは「T.TAKAGI」。\nその直後、監視映像アーカイブへのアクセス記録がある。',effect:()=>addEvidence('高城の端末ログ'),next:'preFinal'},
-roof:{room:'rooftop',speaker:'',visual:'<div class="big">ROOFTOP</div>',text:'屋上への扉の前に、社員証が落ちていた。高城のものだ。\n磁気ログを見ると、21時26分にここを通っている。\n「もう家だ」という言葉とは矛盾する。',effect:()=>addEvidence('高城の屋上入退室ログ'),next:'preFinal'},
-preFinal:{room:'elevator',speaker:'',visual:'<div class="monitor">23:59:42</div>',text:'エレベーターの到着音。\n扉が開く。誰もいない。\n\nその瞬間、複合機がもう一枚の紙を吐き出した。\n\n「0:00　嘘つきを指名してください」',next:'accuse'},
-accuse:{room:'meeting',speaker:'',visual:'<div class="monitor"><span class="red">WHO IS THE LIAR?</span></div>',text:'あなたが指名するのは——',choices:[['高城部長','accuseTakagi'],['三浦','badMiura'],['岸','badKishi'],['真壁','badMakabe']]},
-accuseTakagi:{room:'meeting',speaker:'あなた',visual:'<div class="monitor">TAKAGI</div>',text:'「高城部長だ」\n\n画面が一度、真っ暗になる。\nそして午前0時ちょうど、会議室のスピーカーから声が流れた。',next:'truth1'},
-truth1:{room:'meeting',speaker:'三浦の録音',visual:'<div class="monitor">00:00:00<br><span class="green">AUTO PLAY</span></div>',text:'「これを聞いているなら、たぶん私は会社に行けていない。高城さんに気づかれたから」\n\n「二週間前、あなたも23:47に会社にいた。覚えてる？ 私とすれ違ったよね」',next:'truth2'},
-truth2:{room:'meeting',speaker:'',visual:'<div class="monitor">ARCHIVE_0912 / 23:47:02</div>',text:'そこで記憶がつながった。\n二週間前の23:47。残業を終えて帰るとき、会議室から三浦が飛び出してきた。\nその直後、高城も出てきた。\n\n偽装された「自分の写真」は、その夜の目撃者を思い出させるための合図だった。',next:'truth3'},
-truth3:{room:'server',speaker:'',visual:'<div class="monitor">SCRIPT OWNER<br>M.MIURA</div>',text:'この仕掛けを作ったのは三浦だった。\nただし「嘘つき」は三浦ではない。\n三浦は高城の不正資料を確保し、自分に何かあった場合だけ午前0時に証拠が開くよう仕組んだ。\n\n高城は今夜21時台に会社へ来て、映像を偽装し、三浦に疑いを向けようとしていた。',next:'truth4'},
-truth4:{room:'rooftop',speaker:'',visual:'<div class="monitor">00:03<br>INCOMING CALL: SECURITY</div>',text:'警備員から電話が入る。\n「七階の非常階段で、高城さんを確保しました。あなたのいる部屋へ戻ろうとしていました」\n\n夜はまだ明けない。\nけれど、嘘だけは午前0時を越えられなかった。',ending:['TRUE END','午前0時の証言','三浦の仕掛けた「謎」は、犯人を楽しませるためのゲームではなかった。目撃者であるあなたに、二週間前の記憶を取り戻させるための保険だった。']},
-badMiura:{room:'meeting',speaker:'あなた',visual:'<div class="monitor"><span class="red">MIURA</span></div>',text:'「三浦だ」\n\n午前0時。画面に一行だけ表示された。\n「予約名は、証拠ではない。」\n\n背後で会議室のドアが開いた。',ending:['BAD END','予約名','もっと強い証拠が必要だった。']},
-badKishi:{room:'elevator',speaker:'あなた',visual:'<div class="monitor"><span class="red">KISHI</span></div>',text:'「岸だ」\n\n午前0時。エレベーターが再び七階に戻る。\nそれは岸の嘘ではなく、岸が説明した通りの点検設定だった。\nあなたは肝心の人物を見逃した。',ending:['BAD END','七階へ戻る箱','怪異に見えるものほど、まず仕様を疑うべきだった。']},
-badMakabe:{room:'server',speaker:'あなた',visual:'<div class="monitor"><span class="red">MAKABE</span></div>',text:'「真壁だ」\n\nシステムに詳しい。それだけで疑った。\nだがアクセスログは、知識ではなく端末IDを残していた。\n午前0時、真壁から「高城さんがそっちへ向かった」と着信が入る。',ending:['BAD END','詳しい人は犯人か','技術に詳しいことと、実際に操作したことは別だ。']}
+intro:{v:'<div class="monitor">株式会社ダイナックス<br>府中本社 / 7F</div>',s:'',t:'土曜日、23時52分。\n東京都府中市。株式会社ダイナックス。\n\n俺が会社に戻ってきた理由は、机に家の鍵を忘れたからだった。',c:[['先へ進む','sound']]},
+sound:{v:'<div class="monitor">……カタ、カタ。</div>',s:'あなた',t:'七階には誰もいないはずだった。\nだが、奥の会議室からキーボードを叩く音がする。',c:[['会議室を見る','photo'],['帰る','bad1']]},
+photo:{v:'<div class="monitor">23:47　あなたはここにいた<br>CAM-07</div>',s:'',t:'会議室のモニターに防犯カメラの画像が映っている。\n\nそこにいたのは——俺だ。\n時刻は23時47分。わずか5分前。\nだがその時間、俺はまだ府中駅から会社へ歩いていた。',c:[['防犯カメラの記録を調べる','camera'],['自分の机を調べる','desk']]},
+camera:{v:'<div class="monitor">SOURCE: ARCHIVE<br>DATE: 08/22 23:47</div>',s:'',t:'映像はライブではなかった。\n三週間前の映像に、今日の日付を重ねている。\n\n誰かが意図的に「今夜の俺」を作ったのだ。',e:'証拠：偽装された防犯映像',c:[['机を調べる','desk2']]},
+desk:{v:'<div class="monitor">DESK 07-14<br>USB MEMORY</div>',s:'',t:'机の引き出しに、見覚えのないUSBメモリがある。\nラベルには手書きでこうある。\n\n「0:00まで開くな」',e:'証拠：謎のUSBメモリ',c:[['USBを開く','usb'],['防犯カメラを調べる','camera']]},
+desk2:{v:'<div class="monitor">DESK 07-14<br>USB MEMORY</div>',s:'',t:'机の引き出しからUSBメモリを見つけた。\n「0:00まで開くな」と書かれている。',e:'証拠：謎のUSBメモリ',c:[['待たずに開く','usb'],['会社から逃げる','bad1']]},
+usb:{v:'<div class="monitor">00:00<br>PLAYING MESSAGE...</div>',s:'？？？',t:'「これを見ているということは、映像の偽装に気づいたんだな」\n\nスピーカーから聞き覚えのある声が流れる。\n\n「明日の朝、ダイナックスで起きることを止めてほしい」',c:[['声の主を追う','end']]},
+end:{v:'<div class="monitor">TO BE CONTINUED...</div>',s:'',t:'その瞬間、廊下の非常灯がすべて消えた。\n\n暗闇の向こうで、エレベーターが七階に止まる音がした。\n\n——チン。\n\n扉が開く。',e:'PROTOTYPE END',c:[['最初から','intro']]},
+bad1:{v:'<div class="monitor">ELEVATOR ERROR<br>7F → 7F</div>',s:'',t:'帰ることにした。\nエレベーターで1階を押す。\n\nしばらくして扉が開いた。\n\n表示は——7F。\n\nそして会議室から、またキーボードの音がした。',e:'BAD END：帰れない七階',c:[['最初から','intro']]}
 };
-function addEvidence(x){if(!state.evidence.includes(x))state.evidence.push(x);renderHud()}
-function renderHud(){ $('#hud').innerHTML=state.evidence.map(x=>`<span class="tag">${x}</span>`).join('') }
-function setRoom(r){$('#room').className='room '+(r||'office')}
-function runEffect(sc){if(sc.effect&&!state.flags['done_'+state.scene]){sc.effect();state.flags['done_'+state.scene]=true}}
-function showScene(id){state.scene=id;const sc=scenes[id];if(!sc)return;setRoom(sc.room);$('#speaker').textContent=sc.speaker||'';$('#visual').innerHTML=sc.visual||'';$('#choices').innerHTML='';$('#continue').style.display='none';runEffect(sc);typeText(sc.text||'',()=>{if(sc.choices)showChoices(sc.choices);else if(sc.ending)showEnding(sc.ending);else $('#continue').style.display='block'});state.log.push({speaker:sc.speaker||'',text:sc.text||''});if(state.log.length>80)state.log.shift();renderHud();}
-function typeText(t,done){clearInterval(timer);typing=true;fullText=t;const el=$('#text');el.textContent='';let i=0;timer=setInterval(()=>{i+=2;el.textContent=t.slice(0,i);if(i>=t.length){clearInterval(timer);typing=false;el.textContent=t;done&&done()}},18)}
-function skipTyping(){if(!typing)return false;clearInterval(timer);typing=false;$('#text').textContent=fullText;const sc=scenes[state.scene];if(sc.choices)showChoices(sc.choices);else if(sc.ending)showEnding(sc.ending);else $('#continue').style.display='block';return true}
-function showChoices(arr){$('#continue').style.display='none';$('#choices').innerHTML='';arr.forEach(([label,next])=>{const b=document.createElement('button');b.className='choice';b.textContent=label;b.onclick=e=>{e.stopPropagation();beep(430,.05,.035);showScene(next)};$('#choices').appendChild(b)})}
-function showEnding(e){setTimeout(()=>{$('#endType').textContent=e[0];$('#endType').className='ending '+(e[0].includes('TRUE')?'true':'bad');$('#endTitle').textContent=e[1];$('#endText').textContent=e[2];$('#endOverlay').classList.add('show');if(e[0].includes('TRUE'))chime()},700)}
-function next(){if(skipTyping())return;const sc=scenes[state.scene];if(sc&&sc.next){beep(260,.035,.018);showScene(sc.next)}}
-$('#textbox').addEventListener('click',e=>{if(e.target.closest('button'))return;next()});
-document.addEventListener('keydown',e=>{if(['Enter',' ','ArrowDown'].includes(e.key)){e.preventDefault();next()}})
-function save(){localStorage.setItem('midnightOfficeSave',JSON.stringify(state));flash('SAVE COMPLETE')}
-function load(){const d=localStorage.getItem('midnightOfficeSave');if(!d){flash('NO SAVE DATA');return}const o=JSON.parse(d);state.scene=o.scene||'intro1';state.flags=o.flags||{};state.evidence=o.evidence||[];state.log=o.log||[];state.sound=o.sound!==false;$('#titleOverlay').classList.remove('show');$('#endOverlay').classList.remove('show');updateSound();showScene(state.scene);flash('LOAD COMPLETE')}
-function flash(msg){const old=$('#floor').textContent;$('#floor').textContent=msg;setTimeout(()=>$('#floor').textContent=old,1100)}
-$('#saveBtn').onclick=e=>{e.stopPropagation();save()};$('#loadBtn').onclick=e=>{e.stopPropagation();load()};
-$('#logBtn').onclick=e=>{e.stopPropagation();$('#logList').innerHTML=state.log.slice().reverse().map(x=>`<p>${x.speaker?'<b>'+x.speaker+'</b><br>':''}${x.text.replaceAll('<','&lt;').replaceAll('>','&gt;')}</p>`).join('');$('#logOverlay').classList.add('show')};$('#closeLog').onclick=()=>$('#logOverlay').classList.remove('show');
-$('#startBtn').onclick=()=>{resetState();$('#titleOverlay').classList.remove('show');initAudio();showScene('intro1')};$('#continueBtn').onclick=()=>{initAudio();load()};$('#retryBtn').onclick=()=>{resetState();$('#endOverlay').classList.remove('show');showScene('intro1')};
-function resetState(){state.scene='intro1';state.flags={};state.evidence=[];state.log=[];renderHud()}
-function initAudio(){if(audio)return;audio=new (window.AudioContext||window.webkitAudioContext)();startHum()}
-function startHum(){if(!audio||hum||!state.sound)return;const osc=audio.createOscillator(),gain=audio.createGain(),lfo=audio.createOscillator(),lg=audio.createGain();osc.type='sine';osc.frequency.value=48;gain.gain.value=.012;lfo.frequency.value=.13;lg.gain.value=.004;lfo.connect(lg);lg.connect(gain.gain);osc.connect(gain);gain.connect(audio.destination);osc.start();lfo.start();hum={osc,gain,lfo}}
-function stopHum(){if(!hum)return;try{hum.osc.stop();hum.lfo.stop()}catch{}hum=null}
-function beep(freq=320,dur=.04,vol=.025){if(!state.sound||!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}
-function chime(){[392,523,659].forEach((f,i)=>setTimeout(()=>beep(f,.35,.04),i*180))}
-function updateSound(){if(state.sound)startHum();else stopHum();$('#soundBtn').textContent=state.sound?'SOUND ON':'SOUND OFF'}
-$('#soundBtn').onclick=e=>{e.stopPropagation();initAudio();state.sound=!state.sound;updateSound()};
-setInterval(()=>{const d=new Date();$('#clock').textContent=d.toLocaleTimeString('ja-JP',{hour12:false})},1000);
-renderHud();
+const title=document.getElementById('title'),play=document.getElementById('play'),scene=document.getElementById('scene'),speaker=document.getElementById('speaker'),text=document.getElementById('text'),choices=document.getElementById('choices'),evidence=document.getElementById('evidence');
+function show(id){const x=scenes[id];scene.innerHTML=x.v;speaker.textContent=x.s;text.textContent=x.t;evidence.textContent=x.e||'';choices.innerHTML='';x.c.forEach(([label,next])=>{const b=document.createElement('button');b.textContent=label;b.addEventListener('click',()=>show(next));choices.appendChild(b)})}
+document.getElementById('start').addEventListener('click',()=>{title.style.display='none';play.style.display='flex';show('intro')});
 </script>
 </body>
 </html>
